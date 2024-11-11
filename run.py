@@ -9,6 +9,12 @@ from exp.exp_classification import Exp_Classification
 from utils.print_args import print_args
 import random
 import numpy as np
+import sys
+
+# absolute path to the nested project folder
+nested_project_path = os.path.join(os.path.dirname(__file__), 'Time-Series-Library')
+sys.path.insert(0, nested_project_path)
+
 
 if __name__ == '__main__':
     fix_seed = 2021

@@ -51,7 +51,6 @@ def data_provider(args, flag):
             root_path=args.root_path,
             flag=flag,
         )
-
         data_loader = DataLoader(
             data_set,
             batch_size=batch_size,
@@ -61,9 +60,12 @@ def data_provider(args, flag):
             collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
         )
         return data_set, data_loader
+
+    # FORECASTING
     else:
         if args.data == 'm4':
             drop_last = False
+
         data_set = Data(
             args = args,
             root_path=args.root_path,

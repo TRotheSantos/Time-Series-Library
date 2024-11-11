@@ -97,6 +97,38 @@ class M4Dataset:
                              train_cache_file if training else test_cache_file,
                              allow_pickle=True))
 
+class CustomMeta:
+    seasonal_patterns = ['Yearly', 'Quarterly', 'Monthly', 'Weekly', 'Daily', 'Hourly', 'QuarterHourly']
+    horizons = [6, 8, 18, 13, 14, 48, 48]  # Adjust horizons for QuarterHourly as needed
+    frequencies = [1, 4, 12, 1, 1, 24, 96]  # 96 for 15-minute intervals per day
+    horizons_map = {
+        'Yearly': 6,
+        'Quarterly': 8,
+        'Monthly': 18,
+        'Weekly': 13,
+        'Daily': 14,
+        'Hourly': 48,
+        'QuarterHourly': 48  # Adjust prediction horizon
+    }
+    frequency_map = {
+        'Yearly': 1,
+        'Quarterly': 4,
+        'Monthly': 12,
+        'Weekly': 1,
+        'Daily': 1,
+        'Hourly': 24,
+        'QuarterHourly': 96  # Set for 15-minute data
+    }
+    history_size = {
+        'Yearly': 1.5,
+        'Quarterly': 1.5,
+        'Monthly': 1.5,
+        'Weekly': 10,
+        'Daily': 10,
+        'Hourly': 10,
+        'QuarterHourly': 10  # Adjust history size for 15-minute data
+    }
+
 
 @dataclass()
 class M4Meta:

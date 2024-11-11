@@ -121,6 +121,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         loss = criterion(outputs, batch_y)
                         train_loss.append(loss.item())
                 else:
+                    print("Input batch shape:", batch_x.shape)  # This should show [batch_size, 21, sequence_length]
+
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
                     f_dim = -1 if self.args.features == 'MS' else 0

@@ -1,5 +1,5 @@
 from data_provider.data_factory import data_provider
-from data_provider.m4 import M4Meta
+from data_provider.m4 import M4Meta, CustomMeta
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
 from utils.losses import mape_loss, mase_loss, smape_loss
@@ -28,11 +28,14 @@ class Exp_Short_Term_Forecast(Exp_Basic):
             self.args.frequency_map = M4Meta.frequency_map[self.args.seasonal_patterns]
         model = self.model_dict[self.args.model].Model(self.args).float()
 
+        # MODIFICATION
+        self.args.frequency_map = CustomMeta.frequency_map[self.args.seasonal_patterns]
+
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
 
-    def _get_data(self, flag):
+    def  _get_data(self, flag):
         data_set, data_loader = data_provider(self.args, flag)
         return data_set, data_loader
 
@@ -68,11 +71,15 @@ class Exp_Short_Term_Forecast(Exp_Basic):
         mse = nn.MSELoss()
 
         for epoch in range(self.args.train_epochs):
+            print(f"epoch: {epoch}")
             iter_count = 0
             train_loss = []
 
             self.model.train()
             epoch_time = time.time()
+            print(f"trainloader size:{len(train_loader)}")
+
+
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
                 iter_count += 1
                 model_optim.zero_grad()
@@ -92,6 +99,7 @@ class Exp_Short_Term_Forecast(Exp_Basic):
                 batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
                 batch_y_mark = batch_y_mark[:, -self.args.pred_len:, f_dim:].to(self.device)
+
                 loss_value = criterion(batch_x, self.args.frequency_map, outputs, batch_y, batch_y_mark)
                 loss_sharpness = mse((outputs[:, 1:, :] - outputs[:, :-1, :]), (batch_y[:, 1:, :] - batch_y[:, :-1, :]))
                 loss = loss_value  # + loss_sharpness * 1e-5
@@ -110,11 +118,12 @@ class Exp_Short_Term_Forecast(Exp_Basic):
 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
-            vali_loss = self.vali(train_loader, vali_loader, criterion)
-            test_loss = vali_loss
-            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-            early_stopping(vali_loss, self.model, path)
+            print(f"train loss: {train_loss}")
+            # vali_loss = self.vali(train_loader, vali_loader, criterion)
+            # test_loss = vali_loss
+            # print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
+            #     epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            # early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
@@ -128,7 +137,14 @@ class Exp_Short_Term_Forecast(Exp_Basic):
 
     def vali(self, train_loader, vali_loader, criterion):
         x, _ = train_loader.dataset.last_insample_window()
-        y = vali_loader.dataset.timeseries
+
+        # y = vali_loader.dataset.timeseries instead of
+        if self.args.data == 'm4':
+            y = vali_loader.dataset.timeseries  # This works only for Dataset_M4
+        else:
+            # Dataset_Custom uses 'data_y' for the target
+            y = vali_loader.dataset.data_y
+
         x = torch.tensor(x, dtype=torch.float32).to(self.device)
         x = x.unsqueeze(-1)
 
@@ -151,6 +167,12 @@ class Exp_Short_Term_Forecast(Exp_Basic):
             pred = outputs
             true = torch.from_numpy(np.array(y))
             batch_y_mark = torch.ones(true.shape)
+
+            # MODIFICATION
+            # true = true[:pred.shape[0] * pred.shape[1]].view(pred.shape)
+            # print(true.shape)
+            # print(pred.shape)
+
 
             loss = criterion(x.detach().cpu()[:, :, 0], self.args.frequency_map, pred[:, :, 0], true, batch_y_mark)
 

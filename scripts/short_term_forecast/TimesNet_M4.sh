@@ -2,6 +2,46 @@ export CUDA_VISIBLE_DEVICES=1
 
 model_name=TimesNet
 
+# Energy Scripts -------------------------------------
+
+python -u run.py `
+  --task_name short_term_forecast `
+  --is_training 1 `
+  --root_path ./dataset/energy/ `
+  --data custom `
+  --data_path Germany_2023-2023_WindOn.csv `
+  --seasonal_patterns 'QuarterHourly' `
+  --model_id energy_generation_Hourly `
+  --model Transformer `
+  --features M `
+  --e_layers 2 `
+  --d_layers 1 `
+  --factor 3 `
+  --enc_in 1 `
+  --dec_in 1 `
+  --c_out 1 `
+  --batch_size 16 `
+  --d_model 32 `
+  --d_ff 32 `
+  --top_k 5 `
+  --des 'Energy Gen Exp' `
+  --itr 2 `
+  --learning_rate 0.001 `
+  --loss 'SMAPE' `
+  --target 'Wind On' `
+  --features S `
+  --train_epochs 2 `
+  --seq_len 48 `
+  --label_len 24 `
+  --pred_len 48 `
+  --num_workers 2
+
+
+
+
+# ------------------------------------------------------------------------
+
+
 python -u run.py \
   --task_name short_term_forecast \
   --is_training 1 \

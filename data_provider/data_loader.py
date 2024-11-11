@@ -243,6 +243,7 @@ class Dataset_Custom(Dataset):
         df_raw.columns: ['date', ...(other features), target feature]
         '''
         cols = list(df_raw.columns)
+
         cols.remove(self.target)
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
@@ -267,6 +268,8 @@ class Dataset_Custom(Dataset):
         else:
             data = df_data.values
 
+
+
         df_stamp = df_raw[['date']][border1:border2]
         df_stamp['date'] = pd.to_datetime(df_stamp.date)
         if self.timeenc == 0:
@@ -287,6 +290,7 @@ class Dataset_Custom(Dataset):
 
         self.data_stamp = data_stamp
 
+
     def __getitem__(self, index):
         s_begin = index
         s_end = s_begin + self.seq_len
@@ -305,6 +309,14 @@ class Dataset_Custom(Dataset):
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
+
+
+    # added
+    def last_insample_window(self):
+        # Assuming `self.data_x` is the time series data
+        return self.data_x[-self.seq_len:], self.data_y[-self.seq_len:]
+
+
 
 
 class Dataset_M4(Dataset):
