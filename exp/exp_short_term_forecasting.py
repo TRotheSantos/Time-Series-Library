@@ -138,6 +138,7 @@ class Exp_Short_Term_Forecast(Exp_Basic):
     def vali(self, train_loader, vali_loader, criterion):
         x, _ = train_loader.dataset.last_insample_window()
 
+        # MODIFICATION
         # y = vali_loader.dataset.timeseries instead of
         if self.args.data == 'm4':
             y = vali_loader.dataset.timeseries  # This works only for Dataset_M4
